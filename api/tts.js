@@ -1,4 +1,5 @@
 import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
+import { PassThrough } from 'stream';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -15,27 +16,34 @@ export default async function handler(req, res) {
         const tts = new MsEdgeTTS();
         await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
 
-        // Use toFile alternative - write to buffer
-        const readable = tts.toStream(text);
+        // Use rawToFile to get audio buffer
+        const stream = tts.toStream(text);
 
-        // Collect audio chunks using for-await
+        // Pipe the stream and collect data
+        const passThrough = new PassThrough();
         const chunks = [];
 
-        for await (const chunk of readable) {
-            if (chunk.audio) {
-                chunks.push(chunk.audio);
-            }
-        }
+        return new Promise((resolve, reject) => {
+            stream.pipe(passThrough);
 
-        if (chunks.length === 0) {
-            return res.status(500).json({ error: 'No audio data generated' });
-        }
+            passThrough.on('data', (chunk) => {
+                chunks.push(chunk);
+            });
 
-        const audioBuffer = Buffer.concat(chunks);
+            passThrough.on('end', () => {
+                const audioBuffer = Buffer.concat(chunks);
+                res.setHeader('Content-Type', 'audio/mpeg');
+                res.setHeader('Content-Length', audioBuffer.length);
+                res.send(audioBuffer);
+                resolve();
+            });
 
-        res.setHeader('Content-Type', 'audio/mpeg');
-        res.setHeader('Content-Length', audioBuffer.length);
-        res.send(audioBuffer);
+            passThrough.on('error', (err) => {
+                console.error('Stream Error:', err);
+                res.status(500).json({ error: 'TTS stream failed' });
+                reject(err);
+            });
+        });
 
     } catch (error) {
         console.error('Edge TTS Error:', error);
