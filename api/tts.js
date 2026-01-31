@@ -1,4 +1,4 @@
-import * as EdgeTTS from 'edge-tts';
+import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -12,17 +12,26 @@ export default async function handler(req, res) {
     }
 
     try {
-        const tts = new EdgeTTS.MsEdgeTTS();
-        await tts.setMetadata(voice, EdgeTTS.OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+        const tts = new MsEdgeTTS();
+        await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
 
         const readable = tts.toStream(text);
 
+        // Collect audio chunks
         const chunks = [];
-        for await (const chunk of readable) {
-            if (chunk.type === 'audio') {
-                chunks.push(chunk.data);
-            }
-        }
+
+        await new Promise((resolve, reject) => {
+            readable.on('data', (chunk) => {
+                // The stream emits objects with 'audio' property
+                if (chunk.audio) {
+                    chunks.push(chunk.audio);
+                } else if (Buffer.isBuffer(chunk)) {
+                    chunks.push(chunk);
+                }
+            });
+            readable.on('end', resolve);
+            readable.on('error', reject);
+        });
 
         const audioBuffer = Buffer.concat(chunks);
 
