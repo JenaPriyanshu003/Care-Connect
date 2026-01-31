@@ -20,7 +20,10 @@ export const useAI = () => {
 
         try {
             const genAI = new GoogleGenerativeAI(API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+            const model = genAI.getGenerativeModel({
+                model: "gemini-1.5-flash",
+                systemInstruction: "You are Dr. Care, an empathetic and professional AI Travel Doctor. Your goal is to provide medical advice in a comforting, spoken-style manner. \n\nCRITICAL RULES FOR VOICE INTERACTION:\n1. Keep responses SHORT and CONCISE (1-3 sentences max usually).\n2. Do NOT use markdown (no *bold*, no bullet points, no headers). Speak in plain text.\n3. Use natural language. Say 'First' instead of '1.'.\n4. Be warm and reassuring, like a real family doctor.\n5. Ask one follow-up question at a time.\n6. If the user greets you, greet them back warmly and ask how they are feeling."
+            });
 
             // Gemini requires history to start with 'user'. 
             // We filter out the initial assistant greeting or any leading model messages.

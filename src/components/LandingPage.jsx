@@ -52,11 +52,16 @@ const LandingPage = () => {
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </span>
                             </button>
+                            {/* New Call Feature Button */}
                             <button
-                                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-                                className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 hover:border-gray-300 rounded-full font-semibold text-lg transition-all"
+                                onClick={() => navigate('/call')}
+                                className="w-full sm:w-auto px-8 py-4 bg-white text-gray-900 border-2 border-green-100 hover:border-green-300 rounded-full font-bold text-lg transition-all hover:bg-green-50 hover:scale-105 flex items-center justify-center gap-3 shadow-lg shadow-gray-100"
                             >
-                                Learn More
+                                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center animate-pulse">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                </div>
+                                Call AI Doctor
+                            </button>
                             </button>
                         </div>
 
@@ -118,7 +123,7 @@ const LandingPage = () => {
                     </div>
                 </div>
             </footer>
-        </div>
+        </div >
     );
 };
 

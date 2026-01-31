@@ -39,8 +39,23 @@ export const useSpeech = () => {
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
+
+        // Priority: Google US English (Standard, clear), then Samantha, then Zira
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice =
+            voices.find(v => v.name === "Google US English") ||
+            voices.find(v => v.name === "Samantha") ||
+            voices.find(v => v.name === "Microsoft Zira Desktop");
+
+        if (preferredVoice) {
+            utterance.voice = preferredVoice;
+            console.log("Using Voice:", preferredVoice.name);
+        }
+
         utterance.onstart = () => setIsSpeaking(true);
         utterance.onend = () => setIsSpeaking(false);
+
+        // Gentle, clear, professional pace
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
 
