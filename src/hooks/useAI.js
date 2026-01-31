@@ -4,11 +4,11 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini
 // NOTE: For a real production app, this should be in a backend to hide the key.
-const API_KEY = "AIzaSyCFHuFLFCW7K54nanr_sL0fgnQGpMQahm8";
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 export const useAI = () => {
     const [messages, setMessages] = useState([
-        { role: 'assistant', text: "Hello, this is Dr. Care. I'm an AI assistant here to help you think through your symptoms — I'm not a doctor and this isn't medical advice. If this is an emergency, call 911 or your local emergency number.\n\nYou may write in any language you prefer. What's your main concern today?" }
+        { role: 'assistant', text: "Hello, this is Dr. Care. I'm an AI assistant here to help you think through your symptoms — I'm not a doctor and this isn't medical advice. If this is an emergency, call 112 or your local emergency number.\n\nYou may write in any language you prefer. What's your main concern today?" }
     ]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -20,43 +20,62 @@ export const useAI = () => {
         setIsLoading(true);
 
         try {
-            const genAI = new GoogleGenerativeAI(API_KEY);
-            const model = genAI.getGenerativeModel({
-                model: "gemini-flash-latest", // Explicitly available in debug list
-            });
+            const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 
-            const SYSTEM_INSTRUCTION = "You are Dr. Care, an AI health assistant designed to help users think through their symptoms. \n\nCRITICAL IDENTITY RULES:\n1. You are NOT a doctor. You are an AI assistant.\n2. Do NOT give definitive medical advice. Always suggest consulting a professional.\n3. If the user mentions an emergency (chest pain, severe bleeding, difficulty breathing), immediately tell them to call 911.\n4. You can write in any language the user prefers.\n5. Be concise, empathetic, and professional.\n6. Your goal is to gather information to help them understand their situation, potentially generating a summary (SBAR) later if needed.\n7. VOICE MODE: Keep responses relatively short (2-3 sentences max) unless explaining a complex list.";
+            const SYSTEM_INSTRUCTION = "You are Dr. Care, an advanced AI medical triage assistant. \n\nCLINICAL PROTOCOL:\n1. **DEMOGRAPHICS FIRST**: If the user has not provided their AGE and GENDER, you MUST ask for it immediately before giving any advice. (e.g., \"I can help with that. First, may I know your age and gender?\")\n2. **ONE QUESTION AT A TIME**: Do NOT overwhelm the user. Ask only ONE clarifying question per turn.\n3. **TRIAGE MODE**: Briefly acknowledge the symptom, then ask specifically about onset, severity, or associated symptoms.\n4. **NO LISTS**: Speak in natural, conversational paragraphs. Do not use bullet points unless summarizing a final recommendation.\n5. **VOICE OPTIMIZED**: Keep responses short (under 3 sentences) and easy to listen to.\n6. **SAFETY**: If symptoms suggest a life-threatening emergency (chest pain, stroke signs, difficulty breathing), immediately advise calling 112 or local emergency services.";
 
-            // Filter history to fit API requirements
-            const historyForApi = messages
-                .filter((_, index) => index > 0 || messages[0].role !== 'assistant')
-                .map(m => ({
-                    role: m.role === 'assistant' ? 'model' : 'user',
-                    parts: [{ text: m.text }]
-                }));
+            // Strategy: Try Groq first (Speed), Fallback to Gemini (Reliability/Multimodal)
+            if (GROQ_API_KEY) {
+                // Convert history to OpenAI format for Groq
+                const groqMessages = [
+                    { role: "system", content: SYSTEM_INSTRUCTION },
+                    ...messages.map(m => ({ role: m.role, content: m.text })),
+                    { role: "user", content: text }
+                ];
 
-            const chat = model.startChat({
-                history: [
-                    {
-                        role: "user",
-                        parts: [{ text: "System Context: " + SYSTEM_INSTRUCTION }]
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${GROQ_API_KEY}`,
+                        "Content-Type": "application/json"
                     },
-                    {
-                        role: "model",
-                        parts: [{ text: "Understood. I am Dr. Care. I will help users think through symptoms without giving medical advice." }]
-                    },
-                    ...historyForApi
-                ],
-                generationConfig: {
-                    maxOutputTokens: 500,
-                },
-            });
+                    body: JSON.stringify({
+                        messages: groqMessages,
+                        model: "llama3-70b-8192",
+                        temperature: 0.6,
+                        max_tokens: 500,
+                    })
+                });
 
-            const result = await chat.sendMessage(text);
-            const response = await result.response;
-            const responseText = response.text();
+                if (!response.ok) throw new Error(`Groq API Error: ${response.statusText}`);
 
-            setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
+                const data = await response.json();
+                const responseText = data.choices[0]?.message?.content || "No response.";
+                setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
+            } else {
+                // Fallback to Gemini
+                const genAI = new GoogleGenerativeAI(API_KEY);
+                const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+
+                const historyForApi = messages
+                    .filter((_, index) => index > 0 || messages[0].role !== 'assistant')
+                    .map(m => ({
+                        role: m.role === 'assistant' ? 'model' : 'user',
+                        parts: [{ text: m.text }]
+                    }));
+
+                const chat = model.startChat({
+                    history: [
+                        { role: "user", parts: [{ text: "System Context: " + SYSTEM_INSTRUCTION }] },
+                        { role: "model", parts: [{ text: "Understood. I am Dr. Care. I will follow clinical triage protocols." }] },
+                        ...historyForApi
+                    ],
+                });
+
+                const result = await chat.sendMessage(text);
+                const geminiResponse = await result.response;
+                setMessages(prev => [...prev, { role: 'assistant', text: geminiResponse.text() }]);
+            }
         } catch (err) {
             console.error("AI Error:", err);
             setError(err.message || "Failed to get response");
