@@ -65,11 +65,50 @@ export const useSpeech = () => {
         };
     }, []);
 
-    const speak = useCallback((text, selectedVoiceName = null, pitch = 1.1, rate = 0.95) => {
-        if (!('speechSynthesis' in window)) return;
-
-        // Cancel existing speech
+    const speak = useCallback(async (text, selectedVoiceName = null, pitch = 1.1, rate = 0.95) => {
+        // Stop any current audio
         window.speechSynthesis.cancel();
+
+        // 1. Try ElevenLabs API First
+        const ELEVEN_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
+        const VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // "Bella" (Soft, American)
+
+        if (ELEVEN_KEY) {
+            try {
+                // Determine model based on language (multilingual for non-English support if needed)
+                const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
+                    method: 'POST',
+                    headers: {
+                        'xi-api-key': ELEVEN_KEY,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        model_id: "eleven_monolingual_v1", // Use 'eleven_multilingual_v2' for other languages
+                        voice_settings: {
+                            stability: 0.5,
+                            similarity_boost: 0.75
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const audio = new Audio(URL.createObjectURL(blob));
+                    setIsSpeaking(true);
+                    audio.onended = () => setIsSpeaking(false);
+                    audio.play();
+                    return; // EXIT: Success with ElevenLabs
+                } else {
+                    console.warn("ElevenLabs Error:", await response.text());
+                }
+            } catch (err) {
+                console.warn("ElevenLabs Failed, falling back to browser:", err);
+            }
+        }
+
+        // 2. Fallback: Browser Web Speech API
+        if (!('speechSynthesis' in window)) return;
 
         const utterance = new SpeechSynthesisUtterance(text);
         const availableVoices = window.speechSynthesis.getVoices();
@@ -93,11 +132,14 @@ export const useSpeech = () => {
 
         if (preferredVoice) {
             utterance.voice = preferredVoice;
-            // console.log("Using Voice:", preferredVoice.name); // Debug
         }
 
         utterance.onstart = () => setIsSpeaking(true);
         utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = (e) => {
+            console.error("Speech Error:", e);
+            setIsSpeaking(false);
+        }
 
         // Tuning for "Caring Doctor" Persona
         utterance.pitch = pitch;
