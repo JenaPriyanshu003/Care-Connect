@@ -8,13 +8,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const ChatInterface = () => {
     const navigate = useNavigate();
-    const { messages, sendMessage, isLoading, error, userApiKey, saveApiKey } = useAI();
+    const { messages, sendMessage, isLoading, error } = useAI();
     const { isListening, transcript, setTranscript, startListening, isSpeaking, speak, supported } = useSpeech();
     const [inputValue, setInputValue] = useState('');
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const messagesEndRef = useRef(null);
-    const [showKeyModal, setShowKeyModal] = useState(false);
-    const [tempKey, setTempKey] = useState('');
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,10 +39,7 @@ const ChatInterface = () => {
     // Auto-send in voice mode if silence? (Optional, kept simple for now)
 
     // Auto-save key
-    const handleKeySave = () => {
-        saveApiKey(tempKey);
-        setShowKeyModal(false);
-    };
+
 
     return (
         <div className="flex flex-col h-screen bg-gray-50">
@@ -68,59 +63,10 @@ const ChatInterface = () => {
                     >
                         <FileText className="w-5 h-5" />
                     </button>
-                    <button
-                        onClick={() => setShowKeyModal(true)}
-                        className={`p-2 rounded-full transition-colors ${!userApiKey ? 'bg-red-100 text-red-600 animate-pulse' : 'hover:bg-gray-100 text-gray-600'}`}
-                    >
-                        <Settings className="w-5 h-5" />
-                    </button>
                 </div>
             </header>
 
-            {/* API Key Modal */}
-            <AnimatePresence>
-                {(!userApiKey || showKeyModal) && (
-                    <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9 }} animate={{ scale: 1 }}
-                            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
-                        >
-                            <div className="flex items-center gap-3 mb-4 text-amber-600">
-                                <Key className="w-6 h-6" />
-                                <h3 className="text-lg font-bold">API Key Required</h3>
-                            </div>
-                            <p className="text-gray-600 mb-4 text-sm">
-                                To use the AI Doctor, you need a free Google Gemini API key.
-                            </p>
-                            <input
-                                type="password"
-                                placeholder="Paste Gemini API Key here"
-                                className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                                value={tempKey}
-                                onChange={(e) => setTempKey(e.target.value)}
-                            />
-                            <div className="flex justify-end gap-2">
-                                {userApiKey && (
-                                    <button onClick={() => setShowKeyModal(false)} className="px-4 py-2 text-gray-500 hover:text-gray-700">Cancel</button>
-                                )}
-                                <button
-                                    onClick={handleKeySave}
-                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50"
-                                    disabled={!tempKey}
-                                >
-                                    Save Key
-                                </button>
-                            </div>
-                            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="block mt-4 text-xs text-center text-blue-500 hover:underline">
-                                Get a free key here →
-                            </a>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Chat Area */}
 
             {/* Chat Area */}
             <div className="flex-grow overflow-y-auto p-4 space-y-4">

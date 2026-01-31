@@ -26,18 +26,14 @@ const VisionUpload = () => {
     };
 
     const analyzeImage = async () => {
-        const apiKey = localStorage.getItem('gemini_api_key');
-        if (!apiKey) {
-            setError('Please go to Chat settings and save your API Key first.');
-            return;
-        }
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyBX0zOG_JGmS7nsmbLqBk4LqYbNaqsWiDo";
 
         if (!image) return;
 
         setLoading(true);
         try {
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Use flash for vision
+            const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" }); // Use flash for vision
 
             // Convert base64 to parts
             const base64Data = preview.split(',')[1];

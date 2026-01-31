@@ -3,8 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini
 // NOTE: For a real production app, this should be in a backend to hide the key.
-// But for this "client-side only" prototype, we'll ask user for key or use a placeholder.
-const API_KEY = ""; // User will input this in the UI
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyBX0zOG_JGmS7nsmbLqBk4LqYbNaqsWiDo";
 
 export const useAI = () => {
     const [messages, setMessages] = useState([
@@ -12,12 +11,6 @@ export const useAI = () => {
     ]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [userApiKey, setUserApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
-
-    const saveApiKey = (key) => {
-        setUserApiKey(key);
-        localStorage.setItem('gemini_api_key', key);
-    };
 
     const sendMessage = useCallback(async (text) => {
         // Add user message immediately
@@ -26,18 +19,20 @@ export const useAI = () => {
         setIsLoading(true);
 
         try {
-            if (!userApiKey) {
-                throw new Error("Please enter your Google Gemini API Key first.");
-            }
+            const genAI = new GoogleGenerativeAI(API_KEY);
+            const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-            const genAI = new GoogleGenerativeAI(userApiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-            const chat = model.startChat({
-                history: messages.map(m => ({
+            // Gemini requires history to start with 'user'. 
+            // We filter out the initial assistant greeting or any leading model messages.
+            const historyForApi = messages
+                .filter((_, index) => index > 0 || messages[0].role !== 'assistant')
+                .map(m => ({
                     role: m.role === 'assistant' ? 'model' : 'user',
                     parts: [{ text: m.text }]
-                })),
+                }));
+
+            const chat = model.startChat({
+                history: historyForApi,
                 generationConfig: {
                     maxOutputTokens: 500,
                 },
@@ -51,11 +46,11 @@ export const useAI = () => {
         } catch (err) {
             console.error("AI Error:", err);
             setError(err.message || "Failed to get response");
-            setMessages(prev => [...prev, { role: 'assistant', text: "I'm sorry, I encountered an error. Please check your API key." }]);
+            setMessages(prev => [...prev, { role: 'assistant', text: "I'm sorry, I encountered an error. Please try again later." }]);
         } finally {
             setIsLoading(false);
         }
-    }, [messages, userApiKey]);
+    }, [messages]);
 
-    return { messages, sendMessage, isLoading, error, userApiKey, saveApiKey };
+    return { messages, sendMessage, isLoading, error };
 };
