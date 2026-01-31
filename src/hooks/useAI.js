@@ -4,11 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini
 // NOTE: For a real production app, this should be in a backend to hide the key.
-// Robust key selection to handle Vercel/Vite edge cases
-const envKey = import.meta.env.VITE_GEMINI_API_KEY;
-const API_KEY = (envKey && envKey !== "undefined" && envKey.length > 20)
-    ? envKey
-    : "AIzaSyCFHuFLFCW7K54nanr_sL0fgnQGpMQahm8";
+const API_KEY = "AIzaSyCFHuFLFCW7K54nanr_sL0fgnQGpMQahm8";
 
 export const useAI = () => {
     const [messages, setMessages] = useState([
