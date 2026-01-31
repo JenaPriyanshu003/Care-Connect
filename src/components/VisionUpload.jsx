@@ -108,25 +108,25 @@ const VisionUpload = () => {
     }, []);
 
     return (
-        <div className="h-screen bg-[#f8fafc] flex flex-col font-sans overflow-hidden">
-            {/* Elegant Background Decoration */}
+        <div className="h-screen bg-slate-950 flex flex-col font-sans overflow-hidden text-white selection:bg-green-500 selection:text-white">
+            {/* Background Decoration */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-green-200/40 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-200/40 rounded-full blur-[100px]" />
+                <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[100px]" />
+                <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]" />
             </div>
 
-            <header className="relative z-10 bg-white/80 backdrop-blur-md px-8 py-5 border-b border-gray-100/50 flex items-center justify-between shrink-0">
+            <header className="relative z-10 bg-slate-950/80 backdrop-blur-md px-8 py-5 border-b border-white/10 flex items-center justify-between shrink-0">
                 <button
                     onClick={() => navigate('/')}
-                    className="p-2.5 hover:bg-white rounded-full text-slate-500 hover:text-slate-800 transition-all shadow-sm border border-transparent hover:border-gray-100 active:scale-95"
+                    className="p-2.5 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-all active:scale-95"
                 >
                     <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-tr from-green-500 to-emerald-400 rounded-xl shadow-lg shadow-green-200 flex items-center justify-center text-white">
+                    <div className="w-10 h-10 bg-gradient-to-tr from-green-500 to-emerald-600 rounded-xl shadow-lg shadow-green-900/20 flex items-center justify-center text-white">
                         <Camera className="w-5 h-5" />
                     </div>
-                    <span className="font-bold text-slate-800 text-lg tracking-tight">Vision Diagnosis</span>
+                    <span className="font-bold text-white text-lg tracking-tight">Vision Diagnosis</span>
                 </div>
                 <div className="w-10" />
             </header>
@@ -139,37 +139,37 @@ const VisionUpload = () => {
                         className="w-full max-w-2xl"
                     >
                         <div className="text-center mb-10">
-                            <h2 className="text-4xl font-bold text-slate-900 mb-3 tracking-tight">AI Medical Analysis</h2>
-                            <p className="text-slate-500 text-lg max-w-lg mx-auto leading-relaxed">
+                            <h2 className="text-4xl font-bold text-white mb-3 tracking-tight">AI Medical Analysis</h2>
+                            <p className="text-slate-400 text-lg max-w-lg mx-auto leading-relaxed">
                                 Upload a photo of a physical symptom or a medical report. Our AI will analyze it instantly.
                             </p>
                         </div>
 
-                        <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-white p-8 overflow-hidden">
+                        <div className="bg-slate-900/50 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-black/20 border border-white/10 p-8 overflow-hidden">
                             <div
-                                className="group relative border-2 border-dashed border-slate-200 hover:border-green-400/50 rounded-3xl bg-white/50 min-h-[320px] flex flex-col items-center justify-center gap-6 transition-all duration-500 hover:bg-green-50/10 cursor-pointer"
+                                className="group relative border-2 border-dashed border-white/10 hover:border-green-500/50 rounded-3xl bg-white/5 min-h-[320px] flex flex-col items-center justify-center gap-6 transition-all duration-500 hover:bg-white/10 cursor-pointer"
                                 onClick={() => fileInputRef.current.click()}
                             >
-                                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-slate-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none" />
+                                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none" />
 
-                                <div className="relative w-24 h-24 bg-white rounded-full shadow-xl shadow-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-green-50 to-transparent rounded-full opacity-50" />
-                                    <Camera className="w-10 h-10 text-green-500 relative z-10" />
+                                <div className="relative w-24 h-24 bg-slate-800 rounded-full shadow-xl shadow-black/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-green-500/20 to-transparent rounded-full opacity-50" />
+                                    <Camera className="w-10 h-10 text-green-400 relative z-10" />
                                 </div>
 
                                 <div className="relative text-center space-y-2 z-10">
-                                    <h3 className="text-xl font-bold text-slate-800 group-hover:text-green-700 transition-colors">
+                                    <h3 className="text-xl font-bold text-white group-hover:text-green-400 transition-colors">
                                         Drag & Drop or Paste Image
                                     </h3>
-                                    <p className="text-slate-400 text-sm font-medium">Ctrl+V also works! (Max 10MB)</p>
+                                    <p className="text-slate-500 text-sm font-medium">Ctrl+V also works! (Max 10MB)</p>
                                 </div>
 
-                                <button className="relative z-10 px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-full font-semibold shadow-lg shadow-slate-200 transition-all hover:translate-y-[-2px] active:translate-y-0">
+                                <button className="relative z-10 px-8 py-3 bg-green-600 hover:bg-green-500 text-white rounded-full font-semibold shadow-lg shadow-green-900/20 transition-all hover:translate-y-[-2px] active:translate-y-0">
                                     Select File
                                 </button>
                             </div>
                         </div>
-                        <p className="text-center text-xs font-medium text-slate-400 mt-8 flex items-center justify-center gap-2">
+                        <p className="text-center text-xs font-medium text-slate-500 mt-8 flex items-center justify-center gap-2">
                             <ShieldCheck className="w-3 h-3" />
                             HIPAA Compliant • End-to-End Encrypted • Private
                         </p>
@@ -182,12 +182,12 @@ const VisionUpload = () => {
                             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                             className="w-full md:w-1/2 flex flex-col"
                         >
-                            <div className="relative flex-1 bg-black rounded-[2rem] overflow-hidden shadow-2xl shadow-black/20 group">
+                            <div className="relative flex-1 bg-black rounded-[2rem] overflow-hidden shadow-2xl shadow-black/50 group border border-white/10">
                                 <img src={preview} alt="Upload" className="w-full h-full object-contain opacity-90" />
-                                <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                                <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                                 <button
                                     onClick={() => { setPreview(null); setImage(null); setAnalysis(''); setError(''); }}
-                                    className="absolute top-6 left-6 bg-white/20 backdrop-blur-md text-white p-3 rounded-full hover:bg-white hover:text-red-500 transition-all border border-white/10"
+                                    className="absolute top-6 left-6 bg-black/40 backdrop-blur-md text-white p-3 rounded-full hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 transition-all border border-white/10"
                                 >
                                     <ArrowLeft className="w-5 h-5" />
                                 </button>
@@ -197,19 +197,19 @@ const VisionUpload = () => {
                                 <motion.button
                                     initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
                                     onClick={analyzeImage}
-                                    className="mt-6 w-full py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-2xl font-bold text-xl shadow-xl shadow-green-200 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
+                                    className="mt-6 w-full py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-2xl font-bold text-xl shadow-xl shadow-green-900/20 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
                                 >
                                     <Bot className="w-6 h-6" />
                                     Analyze Diagnosis
                                 </motion.button>
                             )}
                             {loading && (
-                                <div className="mt-6 bg-white/80 backdrop-blur p-8 rounded-2xl shadow-lg border border-white text-center">
-                                    <div className="flex items-center justify-center gap-4 text-slate-800 font-bold text-xl animate-pulse">
-                                        <div className="w-6 h-6 border-[3px] border-slate-200 border-t-green-500 rounded-full animate-spin" />
+                                <div className="mt-6 bg-slate-900/80 backdrop-blur p-8 rounded-2xl shadow-lg border border-white/10 text-center">
+                                    <div className="flex items-center justify-center gap-4 text-white font-bold text-xl animate-pulse">
+                                        <div className="w-6 h-6 border-[3px] border-slate-700 border-t-green-500 rounded-full animate-spin" />
                                         Running Analysis...
                                     </div>
-                                    <p className="text-slate-500 mt-2 font-medium">Identifying symptoms & generating report</p>
+                                    <p className="text-slate-400 mt-2 font-medium">Identifying symptoms & generating report</p>
                                 </div>
                             )}
                         </motion.div>
@@ -220,40 +220,40 @@ const VisionUpload = () => {
                             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
                         >
                             {(analysis || error) && (
-                                <div className="h-full bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-white overflow-hidden flex flex-col">
-                                    <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white/50">
-                                        <h3 className={`flex items-center gap-3 font-bold text-xl ${error ? 'text-red-600' : 'text-slate-800'}`}>
-                                            {error ? <AlertTriangle className="w-6 h-6" /> : <div className="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center"><Bot className="w-5 h-5" /></div>}
+                                <div className="h-full bg-slate-900/80 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-black/20 border border-white/10 overflow-hidden flex flex-col">
+                                    <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-white/5">
+                                        <h3 className={`flex items-center gap-3 font-bold text-xl ${error ? 'text-red-400' : 'text-white'}`}>
+                                            {error ? <AlertTriangle className="w-6 h-6" /> : <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center"><Bot className="w-5 h-5" /></div>}
                                             {error ? 'Analysis Failed' : 'Medical Assessment'}
                                         </h3>
-                                        {!error && <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase tracking-wide">AI Generated</span>}
+                                        {!error && <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-full uppercase tracking-wide border border-green-500/20">AI Generated</span>}
                                     </div>
 
                                     <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                                         {error ? (
                                             <div className="h-full flex flex-col items-center justify-center text-center p-4">
-                                                <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 animate-in zoom-in duration-300">
+                                                <div className="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mb-6 animate-in zoom-in duration-300">
                                                     <AlertTriangle className="w-10 h-10 text-red-500" />
                                                 </div>
-                                                <h4 className="text-2xl font-bold text-slate-900 mb-3">
+                                                <h4 className="text-2xl font-bold text-white mb-3">
                                                     {error.includes("not appear to be a medical image") ? "Non-Medical Image Detected" : "Analysis Error"}
                                                 </h4>
-                                                <p className="text-slate-500 leading-relaxed max-w-xs mx-auto mb-8 break-words text-sm font-mono bg-red-50 p-2 rounded">{error}</p>
+                                                <p className="text-slate-400 leading-relaxed max-w-xs mx-auto mb-8 break-words text-sm font-mono bg-red-500/10 p-2 rounded border border-red-500/20">{error}</p>
                                                 <button
                                                     onClick={() => { setPreview(null); setImage(null); setError(''); }}
-                                                    className="px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
+                                                    className="px-8 py-3 bg-white text-slate-900 rounded-full font-bold hover:bg-slate-200 transition-colors shadow-lg shadow-white/10"
                                                 >
                                                     Upload New Photo
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div className="prose prose-lg px-2">
+                                            <div className="prose prose-invert prose-lg px-2 max-w-none">
                                                 {analysis.split('\n').map((line, index) => {
                                                     // Headers (## Title)
                                                     if (line.startsWith('##')) {
                                                         const title = line.replace(/##\s*/, '').replace(/\*/g, '');
                                                         return (
-                                                            <h3 key={index} className="text-lg font-bold text-slate-900 mt-6 mb-3 pb-2 border-b border-gray-100 flex items-center gap-2">
+                                                            <h3 key={index} className="text-lg font-bold text-white mt-6 mb-3 pb-2 border-b border-white/10 flex items-center gap-2">
                                                                 <span className="w-1 h-6 bg-green-500 rounded-full inline-block mr-2"></span>
                                                                 {title}
                                                             </h3>
@@ -264,8 +264,8 @@ const VisionUpload = () => {
                                                         const content = line.replace(/-\s*/, '').replace(/\*/g, '');
                                                         return (
                                                             <div key={index} className="flex items-start gap-3 mb-3 ml-2">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-green-400 mt-2.5 shrink-0" />
-                                                                <p className="text-slate-600 leading-relaxed">{content}</p>
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2.5 shrink-0" />
+                                                                <p className="text-slate-300 leading-relaxed">{content}</p>
                                                             </div>
                                                         );
                                                     }
@@ -273,9 +273,9 @@ const VisionUpload = () => {
                                                     if (line.includes('**')) {
                                                         const parts = line.split('**');
                                                         return (
-                                                            <p key={index} className="text-slate-600 mb-2 leading-relaxed">
+                                                            <p key={index} className="text-slate-300 mb-2 leading-relaxed">
                                                                 {parts.map((part, i) => (
-                                                                    i % 2 === 1 ? <span key={i} className="font-bold text-slate-800">{part}</span> : part
+                                                                    i % 2 === 1 ? <span key={i} className="font-bold text-white">{part}</span> : part
                                                                 ))}
                                                             </p>
                                                         );
@@ -284,14 +284,14 @@ const VisionUpload = () => {
                                                     if (!line.trim()) return <div key={index} className="h-2" />;
 
                                                     // Regular text
-                                                    return <p key={index} className="text-slate-600 mb-2 leading-relaxed">{line}</p>;
+                                                    return <p key={index} className="text-slate-300 mb-2 leading-relaxed">{line}</p>;
                                                 })}
                                             </div>
                                         )}
                                     </div>
                                     {!error && (
-                                        <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
-                                            <p className="text-xs text-slate-400 font-medium">
+                                        <div className="p-4 bg-white/5 border-t border-white/5 text-center">
+                                            <p className="text-xs text-slate-500 font-medium">
                                                 Disclaimer: This tool provides information, not medical advice. Consult a professional.
                                             </p>
                                         </div>
