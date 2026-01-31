@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: 22 163 74; /* #16a34a */
+  }
+  body {
+    @apply antialiased text-gray-900 bg-white;
+  }
+}
+
+/* Custom Animations from Original Site */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.pulse-ring {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 9999px;
+  border: 2px solid #16a34a;
+  animation: pulse-ring 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.waveform-bar {
+  animation: waveform 0.8s ease-in-out infinite;
+}
