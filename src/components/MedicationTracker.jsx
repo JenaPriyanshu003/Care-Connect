@@ -25,21 +25,104 @@ const MedicationTracker = () => {
         totalPills: 30, // For refill tracking
     });
 
-    // Load Data
+    // Load from MongoDB
     useEffect(() => {
-        const saved = localStorage.getItem('care_connect_meds');
-        if (saved) {
-            setMeds(JSON.parse(saved));
-        }
+        fetchMeds();
         // Request notification permission
         if ('Notification' in window) {
             Notification.requestPermission();
         }
     }, []);
 
-    const saveMeds = (updatedMeds) => {
-        setMeds(updatedMeds);
-        localStorage.setItem('care_connect_meds', JSON.stringify(updatedMeds));
+    const fetchMeds = async () => {
+        try {
+            const res = await fetch('/api/medications');
+            if (res.ok) {
+                const data = await res.json();
+                setMeds(data.map(m => ({ ...m, id: m._id }))); // Map _id to id for UI consistency
+            }
+        } catch (error) {
+            console.error("Failed to fetch meds", error);
+            toast.error("Failed to load medications");
+        }
+    };
+
+    const addMed = async () => {
+        if (!newItem.name || !newItem.time || !newItem.dosage) {
+            toast.error('Please fill all required fields');
+            return;
+        }
+
+        const medData = {
+            ...newItem,
+            lastTakenDate: null,
+            taken: false
+        };
+
+        try {
+            const res = await fetch('/api/medications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(medData)
+            });
+
+            if (res.ok) {
+                await fetchMeds(); // Refresh list
+                setNewItem({ name: '', dosage: '', type: 'pill', time: '', instructions: 'after_food', totalPills: 30 });
+                setShowForm(false);
+                toast.success('Medication added!');
+            }
+        } catch (error) {
+            console.error("Failed to add med", error);
+            toast.error("Failed to save medication");
+        }
+    };
+
+    const takeMed = async (id) => {
+        const med = meds.find(m => m.id === id);
+        if (!med) return;
+
+        const today = new Date().toDateString();
+        if (med.lastTakenDate === today) return; // Already taken today
+
+        const newCount = Math.max(0, parseInt(med.totalPills || 0) - 1);
+        if (newCount <= 5) toast.error(`Refill Warning: Only ${newCount} ${med.name} left!`, { icon: '⚠️' });
+
+        try {
+            const res = await fetch(`/api/medications?id=${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lastTakenDate: today,
+                    totalPills: newCount,
+                    taken: true // Mark as taken for simple UI logic if needed
+                })
+            });
+
+            if (res.ok) {
+                fetchMeds();
+                toast.success('Medication recorded as taken');
+            }
+        } catch (error) {
+            console.error("Failed to update med", error);
+        }
+    };
+
+    const deleteMed = async (id) => {
+        if (!window.confirm('Delete this medication?')) return;
+
+        try {
+            const res = await fetch(`/api/medications?id=${id}`, {
+                method: 'DELETE',
+            });
+
+            if (res.ok) {
+                fetchMeds();
+                toast.success('Deleted');
+            }
+        } catch (error) {
+            console.error("Failed to delete med", error);
+        }
     };
 
     // Notification Logic
@@ -50,9 +133,7 @@ const MedicationTracker = () => {
             const today = now.toDateString();
 
             meds.forEach(med => {
-
                 if (med.time === currentTime && med.lastTakenDate !== today) {
-
                     // Prevent spamming notification in the same minute
                     const lastNotified = sessionStorage.getItem(`notified-${med.id}-${today}`);
                     if (lastNotified === currentTime) return;
@@ -94,46 +175,6 @@ const MedicationTracker = () => {
         checkMeds(); // Run immediately on mount
         return () => clearInterval(interval);
     }, [meds]);
-
-    const addMed = () => {
-        if (!newItem.name || !newItem.time || !newItem.dosage) {
-            toast.error('Please fill all required fields');
-            return;
-        }
-
-        const med = {
-            ...newItem,
-            id: Date.now(),
-            lastTakenDate: null
-        };
-
-        saveMeds([...meds, med]);
-        setNewItem({ name: '', dosage: '', type: 'pill', time: '', instructions: 'after_food', totalPills: 30 });
-        setShowForm(false);
-        toast.success('Medication added!');
-    };
-
-    const takeMed = (id) => {
-        const today = new Date().toDateString();
-        const updated = meds.map(m => {
-            if (m.id === id) {
-                if (m.lastTakenDate === today) return m; // Already taken
-                const newCount = Math.max(0, parseInt(m.totalPills) - 1);
-                if (newCount <= 5) toast.error(`Refill Warning: Only ${newCount} ${m.name} left!`, { icon: '⚠️' });
-                return { ...m, lastTakenDate: today, totalPills: newCount };
-            }
-            return m;
-        });
-        saveMeds(updated);
-        toast.success('Medication recorded as taken');
-    };
-
-    const deleteMed = (id) => {
-        if (window.confirm('Delete this medication?')) {
-            saveMeds(meds.filter(m => m.id !== id));
-            toast.success('Deleted');
-        }
-    };
 
     const getIcon = (type) => {
         switch (type) {

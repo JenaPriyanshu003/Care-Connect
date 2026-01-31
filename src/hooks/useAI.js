@@ -26,10 +26,18 @@ export const useAI = () => {
 
             // Strategy: Try Groq first (Speed), Fallback to Gemini (Reliability/Multimodal)
             if (GROQ_API_KEY) {
-                // Convert history to OpenAI format for Groq
+                // Formatting for Groq (OpenAI Compatible)
+                // Filter out any messages with empty content or invalid roles
+                const validMessages = messages
+                    .filter(m => m.text && m.text.trim() !== '')
+                    .map(m => ({
+                        role: m.role === 'model' ? 'assistant' : m.role, // normalize roles
+                        content: m.text
+                    }));
+
                 const groqMessages = [
                     { role: "system", content: SYSTEM_INSTRUCTION },
-                    ...messages.map(m => ({ role: m.role, content: m.text })),
+                    ...validMessages,
                     { role: "user", content: text }
                 ];
 
@@ -41,13 +49,16 @@ export const useAI = () => {
                     },
                     body: JSON.stringify({
                         messages: groqMessages,
-                        model: "llama3-70b-8192",
+                        model: "llama-3.3-70b-versatile", // Updated to latest stable
                         temperature: 0.6,
-                        max_tokens: 500,
+                        max_tokens: 1024,
                     })
                 });
 
-                if (!response.ok) throw new Error(`Groq API Error: ${response.statusText}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Groq API Error: ${errorData.error?.message || response.statusText}`);
+                }
 
                 const data = await response.json();
                 const responseText = data.choices[0]?.message?.content || "No response.";
@@ -55,7 +66,7 @@ export const useAI = () => {
             } else {
                 // Fallback to Gemini
                 const genAI = new GoogleGenerativeAI(API_KEY);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b" });
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
                 const historyForApi = messages
                     .filter((_, index) => index > 0 || messages[0].role !== 'assistant')

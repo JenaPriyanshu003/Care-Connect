@@ -65,7 +65,7 @@ export const useSpeech = () => {
         };
     }, []);
 
-    const speak = useCallback((text, selectedVoiceName = null, pitch = 1.3, rate = 1.0) => {
+    const speak = useCallback((text, selectedVoiceName = null, pitch = 1.1, rate = 0.95) => {
         if (!('speechSynthesis' in window)) return;
 
         // Cancel existing speech
@@ -81,28 +81,27 @@ export const useSpeech = () => {
         }
 
         if (!preferredVoice) {
-            // Priority 1: Google US English (Female sounding)
-            // Priority 2: Microsoft Zira (Female)
-            // Priority 3: Samantha (Mac Female)
-            // Priority 4: Any voice with "Female" in the name
+            // Priority Cascade for "Dr. Care" Female Voice
             preferredVoice =
-                availableVoices.find(v => v.name === "Google US English") ||
-                availableVoices.find(v => v.name === "Microsoft Zira Desktop") ||
-                availableVoices.find(v => v.name === "Samantha") ||
-                availableVoices.find(v => v.name.includes("Female"));
+                availableVoices.find(v => v.name === "Google US English") || // Best Chrome Voice
+                availableVoices.find(v => v.name === "Samantha") || // Best Mac Voice
+                availableVoices.find(v => v.name === "Microsoft Zira Desktop - English (United States)") || // Windows
+                availableVoices.find(v => v.name === "Google UK English Female") ||
+                availableVoices.find(v => v.name.includes("Female")) ||
+                availableVoices.find(v => v.lang === "en-US"); // Fallback
         }
 
         if (preferredVoice) {
             utterance.voice = preferredVoice;
-            console.log("Using Voice:", preferredVoice.name);
+            // console.log("Using Voice:", preferredVoice.name); // Debug
         }
 
         utterance.onstart = () => setIsSpeaking(true);
         utterance.onend = () => setIsSpeaking(false);
 
-        // Apply pitch and rate
+        // Tuning for "Caring Doctor" Persona
         utterance.pitch = pitch;
-        utterance.rate = rate;
+        utterance.rate = rate; // Slightly slower is more calming
 
         window.speechSynthesis.speak(utterance);
     }, []);
