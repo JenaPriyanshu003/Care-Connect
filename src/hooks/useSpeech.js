@@ -83,14 +83,16 @@ export const useSpeech = () => {
 
         if (!preferredVoice) {
             // Priority Cascade for "Dr. Care" Female Voice
-            // Chrome on Mac/Windows has great Google voices
+            // Google voices (Chrome) are best, then natural-sounding Apple voices
             preferredVoice =
-                availableVoices.find(v => v.name === "Google US English") || // Chrome Best
-                availableVoices.find(v => v.name === "Samantha") || // Mac Native
+                availableVoices.find(v => v.name === "Google US English") || // Chrome Best (sounds female)
+                availableVoices.find(v => v.name === "Google UK English Female") || // Explicitly female
+                availableVoices.find(v => v.name === "Karen") || // Mac - Australian, more natural
+                availableVoices.find(v => v.name === "Moira") || // Mac - Irish, soft
                 availableVoices.find(v => v.name.includes("Microsoft Zira")) || // Windows
-                availableVoices.find(v => v.name === "Google UK English Female") ||
                 availableVoices.find(v => v.name.toLowerCase().includes("female")) ||
                 availableVoices.find(v => v.lang === "en-US" && v.name.includes("Google")) ||
+                availableVoices.find(v => v.name === "Samantha") || // Mac Default (last resort)
                 availableVoices.find(v => v.lang.startsWith("en")); // Any English
         }
 
