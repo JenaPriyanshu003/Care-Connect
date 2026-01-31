@@ -26,7 +26,7 @@ const VisionUpload = () => {
     };
 
     const analyzeImage = async () => {
-        const apiKey = "AIzaSyCFHuFLFCW7K54nanr_sL0fgnQGpMQahm8";
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
         if (!image) return;
 
         setLoading(true);
