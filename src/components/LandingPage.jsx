@@ -104,7 +104,7 @@ const LandingPage = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             <SmallFeatureCard title="Vision Diagnosis" icon="📸" link="/vision" />
                             <SmallFeatureCard title="Emergency Finder" icon="🏥" link="/emergency" />
-                            <SmallFeatureCard title="Travel Cards" icon="🗣️" link="/cards" />
+                            <SmallFeatureCard title="Travel Cards" icon="🗣️" link="/travel-cards" />
                             <SmallFeatureCard title="Pill Tracker" icon="💊" link="/meds" />
                         </div>
                     </div>
