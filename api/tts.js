@@ -15,23 +15,21 @@ export default async function handler(req, res) {
         const tts = new MsEdgeTTS();
         await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
 
+        // Use toFile alternative - write to buffer
         const readable = tts.toStream(text);
 
-        // Collect audio chunks
+        // Collect audio chunks using for-await
         const chunks = [];
 
-        await new Promise((resolve, reject) => {
-            readable.on('data', (chunk) => {
-                // The stream emits objects with 'audio' property
-                if (chunk.audio) {
-                    chunks.push(chunk.audio);
-                } else if (Buffer.isBuffer(chunk)) {
-                    chunks.push(chunk);
-                }
-            });
-            readable.on('end', resolve);
-            readable.on('error', reject);
-        });
+        for await (const chunk of readable) {
+            if (chunk.audio) {
+                chunks.push(chunk.audio);
+            }
+        }
+
+        if (chunks.length === 0) {
+            return res.status(500).json({ error: 'No audio data generated' });
+        }
 
         const audioBuffer = Buffer.concat(chunks);
 
