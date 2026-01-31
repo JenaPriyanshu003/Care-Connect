@@ -84,7 +84,7 @@ export const useSpeech = () => {
                     },
                     body: JSON.stringify({
                         text: text,
-                        model_id: "eleven_monolingual_v1", // Use 'eleven_multilingual_v2' for other languages
+                        model_id: "eleven_multilingual_v2", // Updated to supported model
                         voice_settings: {
                             stability: 0.5,
                             similarity_boost: 0.75
