@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Phone, Mic, MicOff, Video, VideoOff, MessageSquare, X, Volume2, VolumeX, Image as ImageIcon } from 'lucide-react';
+import { Phone, Mic, MicOff, Video, VideoOff, MessageSquare, Volume2, FileText, Download, X, ArrowLeft, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAI } from '../hooks/useAI';
 import { useSpeech } from '../hooks/useSpeech';
+import { jsPDF } from 'jspdf';
 
 const CallInterface = () => {
     const navigate = useNavigate();
@@ -11,11 +12,16 @@ const CallInterface = () => {
     const { isListening, transcript, startListening, isSpeaking, speak, supported, setTranscript } = useSpeech();
 
     // Call States
-    const [callState, setCallState] = useState('idle'); // idle, consenting, connecting, active, ended
+    const [callState, setCallState] = useState('idle'); // idle, consenting, connecting, active, ending, ended
     const [duration, setDuration] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
-    const [isVideoOn, setIsVideoOn] = useState(false); // Creating a fake video UI for now
+    const [isVideoOn, setIsVideoOn] = useState(false);
     const [consentChecked, setConsentChecked] = useState(false);
+
+    // Report State
+    const [showEndModal, setShowEndModal] = useState(false);
+    const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+    const [reportData, setReportData] = useState(null);
 
     // Refs for handling conversation flow
     const lastMessageCount = useRef(messages.length);
@@ -45,7 +51,6 @@ const CallInterface = () => {
     useEffect(() => {
         if (callState === 'active' && !hasSpokenGreeting.current) {
             hasSpokenGreeting.current = true;
-            // Speak the last message (which is usually the greeting)
             const lastMsg = messages[messages.length - 1];
             if (lastMsg && lastMsg.role === 'assistant') {
                 speak(lastMsg.text);
@@ -56,9 +61,8 @@ const CallInterface = () => {
     // 2. Handle User Speech Input
     useEffect(() => {
         if (transcript && !isListening) {
-            // User finished speaking
             sendMessage(transcript);
-            setTranscript(''); // Clear for next turn
+            setTranscript('');
         }
     }, [transcript, isListening, sendMessage, setTranscript]);
 
@@ -73,13 +77,11 @@ const CallInterface = () => {
         }
     }, [messages, speak]);
 
-    // 4. Auto-Turn-Taking (Loop back to listening after AI finishes speaking)
+    // 4. Auto-Turn-Taking
     useEffect(() => {
-        // If AI stopped speaking, and we are in active call, and not currently listening... start listening again.
-        // We add a small delay to avoid cutting off reflection or breathing room.
         if (callState === 'active' && !isSpeaking && !isListening && !isLoading) {
             const timeout = setTimeout(() => {
-                if (callState === 'active') { // Check again
+                if (callState === 'active') {
                     startListening();
                 }
             }, 500);
@@ -87,42 +89,158 @@ const CallInterface = () => {
         }
     }, [isSpeaking, isListening, isLoading, callState, startListening]);
 
-
     // Sound Refs
-    const ringAudioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3')); // Phone Ring
-    const hangupAudioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/790/790-preview.mp3')); // End Call
+    const ringAudioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3'));
+    const hangupAudioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
+
+    // Generate SBAR Report from conversation
+    const generateSBARReport = () => {
+        const userMessages = messages.filter(m => m.role === 'user').map(m => m.text);
+        const aiMessages = messages.filter(m => m.role === 'assistant').map(m => m.text);
+
+        // Extract key information from conversation
+        const situation = userMessages.length > 0
+            ? userMessages[0]
+            : "Patient initiated consultation with AI Doctor.";
+
+        const background = userMessages.slice(1, 3).join(' ') || "No additional background provided.";
+
+        const assessment = aiMessages.length > 1
+            ? aiMessages.slice(-2).join(' ').substring(0, 500)
+            : "AI assessment based on described symptoms.";
+
+        const recommendation = aiMessages.length > 0
+            ? aiMessages[aiMessages.length - 1].substring(0, 500)
+            : "Continue monitoring symptoms and consult a healthcare provider if symptoms persist.";
+
+        return {
+            situation,
+            background,
+            assessment,
+            recommendation,
+            duration: formatTime(duration),
+            date: new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }),
+            messageCount: messages.length
+        };
+    };
+
+    // Download PDF Report
+    const downloadReport = () => {
+        setIsGeneratingReport(true);
+
+        const report = reportData || generateSBARReport();
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFillColor(16, 185, 129); // Green
+        doc.rect(0, 0, 210, 35, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Care Connect', 20, 22);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('AI Health Consultation Report', 20, 30);
+
+        // Date and Duration
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(10);
+        doc.text(`Date: ${report.date}`, 140, 22);
+        doc.text(`Duration: ${report.duration}`, 140, 28);
+
+        // SBAR Sections
+        let yPos = 50;
+        const sections = [
+            { title: 'S - Situation', content: report.situation, color: [239, 68, 68] },
+            { title: 'B - Background', content: report.background, color: [59, 130, 246] },
+            { title: 'A - Assessment', content: report.assessment, color: [245, 158, 11] },
+            { title: 'R - Recommendation', content: report.recommendation, color: [16, 185, 129] }
+        ];
+
+        sections.forEach(section => {
+            // Section Header
+            doc.setFillColor(...section.color);
+            doc.rect(15, yPos - 5, 180, 10, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(section.title, 20, yPos + 2);
+
+            // Section Content
+            yPos += 15;
+            doc.setTextColor(50, 50, 50);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+
+            const lines = doc.splitTextToSize(section.content, 170);
+            doc.text(lines, 20, yPos);
+            yPos += lines.length * 5 + 15;
+        });
+
+        // Disclaimer
+        yPos += 10;
+        doc.setFillColor(254, 243, 199);
+        doc.rect(15, yPos - 5, 180, 25, 'F');
+        doc.setTextColor(146, 64, 14);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('DISCLAIMER', 20, yPos + 2);
+        doc.setFont('helvetica', 'normal');
+        const disclaimer = 'This report is generated by an AI assistant and is not a medical diagnosis. Please share this report with a licensed healthcare provider for professional medical advice.';
+        const disclaimerLines = doc.splitTextToSize(disclaimer, 170);
+        doc.text(disclaimerLines, 20, yPos + 10);
+
+        // Footer
+        doc.setTextColor(150, 150, 150);
+        doc.setFontSize(8);
+        doc.text('Generated by Care Connect AI | Not a substitute for professional medical advice', 105, 285, { align: 'center' });
+
+        // Save
+        doc.save(`CareConnect_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+        setIsGeneratingReport(false);
+    };
 
     // Handlers
     const handleStartCall = () => {
         setCallState('connecting');
-
-        // Start Ringing
         ringAudioRef.current.loop = true;
         ringAudioRef.current.play().catch(e => console.log('Audio play failed', e));
 
         setTimeout(() => {
-            // Stop Ringing & Connect
             ringAudioRef.current.pause();
             ringAudioRef.current.currentTime = 0;
             setCallState('active');
-        }, 3000); // 3s ringing simulation
+        }, 3000);
     };
 
     const handleEndCall = () => {
-        setCallState('ended');
-
-        // Stop any ringing if ending early
+        // Stop speech
+        window.speechSynthesis.cancel();
         ringAudioRef.current.pause();
 
-        // Play Hangup
-        hangupAudioRef.current.play().catch(e => console.log('Audio play failed', e));
+        // Generate report data
+        setReportData(generateSBARReport());
 
-        setTimeout(() => {
-            navigate('/');
-        }, 1500);
+        // Show end modal
+        setShowEndModal(true);
     };
 
-    // Render Components
+    const handleEndWithoutReport = () => {
+        hangupAudioRef.current.play().catch(e => console.log('Audio play failed', e));
+        setCallState('ended');
+        setTimeout(() => navigate('/'), 1000);
+    };
+
+    const handleContinueCall = () => {
+        setShowEndModal(false);
+        startListening();
+    };
 
     // Consent Modal
     if (callState === 'idle' || callState === 'consenting') {
@@ -171,6 +289,89 @@ const CallInterface = () => {
                             <Phone className="w-5 h-5 fill-current" />
                             Start Call
                         </button>
+                    </div>
+                </motion.div>
+            </div>
+        );
+    }
+
+    // End Consultation Modal
+    if (showEndModal) {
+        return (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl"
+                >
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-green-600" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">End Consultation</h2>
+                            <p className="text-gray-500 text-sm">Would you like to download a summary report?</p>
+                        </div>
+                    </div>
+
+                    {/* Report Preview */}
+                    {reportData && (
+                        <div className="bg-gray-50 rounded-xl p-4 mb-6 max-h-48 overflow-y-auto">
+                            <div className="space-y-3 text-sm">
+                                <div>
+                                    <span className="font-semibold text-red-600">Situation: </span>
+                                    <span className="text-gray-700">{reportData.situation.substring(0, 100)}...</span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-blue-600">Assessment: </span>
+                                    <span className="text-gray-700">{reportData.assessment.substring(0, 100)}...</span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-green-600">Recommendation: </span>
+                                    <span className="text-gray-700">{reportData.recommendation.substring(0, 100)}...</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Share Notice */}
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
+                        <div className="flex items-start gap-3">
+                            <Share2 className="w-5 h-5 text-blue-600 mt-0.5" />
+                            <div>
+                                <p className="font-semibold text-blue-800 text-sm">Share with your healthcare provider</p>
+                                <p className="text-blue-700 text-xs mt-1">
+                                    This SBAR report can help your doctor understand your symptoms quickly.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="space-y-3">
+                        <button
+                            onClick={downloadReport}
+                            disabled={isGeneratingReport}
+                            className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-full flex items-center justify-center gap-2 transition-all hover:scale-[1.02] shadow-lg shadow-green-200"
+                        >
+                            <Download className="w-5 h-5" />
+                            {isGeneratingReport ? 'Generating...' : 'Download SBAR Report (PDF)'}
+                        </button>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleContinueCall}
+                                className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-full transition-colors"
+                            >
+                                Continue Consultation
+                            </button>
+                            <button
+                                onClick={handleEndWithoutReport}
+                                className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-500 font-semibold rounded-full transition-colors"
+                            >
+                                End Without Report
+                            </button>
+                        </div>
                     </div>
                 </motion.div>
             </div>
@@ -242,7 +443,7 @@ const CallInterface = () => {
                             className="max-w-md text-center"
                         >
                             <p className="text-2xl font-medium text-gray-800 leading-relaxed">
-                                {isListening ? (transcript || "Listening...") : messages[messages.length - 1].text}
+                                {isListening ? (transcript || "Listening...") : messages[messages.length - 1]?.text}
                             </p>
                         </motion.div>
                     )}
