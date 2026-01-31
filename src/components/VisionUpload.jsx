@@ -47,10 +47,12 @@ const VisionUpload = () => {
 
             const prompt = `You are a high-level Medical AI Consultant.
             
-            STEP 1: STRICT VALIDATION
-            Analyze the image. If it is NOT a medical symptom (rash, wound, swelling, eye issue) AND NOT a medical document (lab report, prescription, packaging), you MUST return EXACTLY: "INVALID_IMAGE"
+            STEP 1: VALIDATION
+            Analyze the image. Use your best judgment to identify ANY possible medical relevance (e.g., skin conditions, medicines, wounds, medical reports, anatomy, or even general health concerns).
+            Only return "INVALID_IMAGE" if the image is COMPLETELY unrelated (e.g., a car, a landscape, a meme, a video game).
+            If you are unsure, proceed with the analysis.
 
-            STEP 2: PROFESSIONAL ANALYSIS (If valid)
+            STEP 2: PROFESSIONAL ANALYSIS
             Provide a structured clinical report using markdown.
             
             ## 📋 Clinical Observation
@@ -80,7 +82,7 @@ const VisionUpload = () => {
             }
         } catch (err) {
             console.error(err);
-            setError('Analysis failed. Try a clear photo or check your connection.');
+            setError(err.toString());
         } finally {
             setLoading(false);
         }
@@ -233,8 +235,10 @@ const VisionUpload = () => {
                                                 <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 animate-in zoom-in duration-300">
                                                     <AlertTriangle className="w-10 h-10 text-red-500" />
                                                 </div>
-                                                <h4 className="text-2xl font-bold text-slate-900 mb-3">Non-Medical Image Detected</h4>
-                                                <p className="text-slate-500 leading-relaxed max-w-xs mx-auto mb-8">{error}</p>
+                                                <h4 className="text-2xl font-bold text-slate-900 mb-3">
+                                                    {error.includes("not appear to be a medical image") ? "Non-Medical Image Detected" : "Analysis Error"}
+                                                </h4>
+                                                <p className="text-slate-500 leading-relaxed max-w-xs mx-auto mb-8 break-words text-sm font-mono bg-red-50 p-2 rounded">{error}</p>
                                                 <button
                                                     onClick={() => { setPreview(null); setImage(null); setError(''); }}
                                                     className="px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"

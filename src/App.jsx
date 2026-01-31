@@ -21,7 +21,7 @@ function App() {
                     <Route path="/call" element={<CallInterface />} />
                     <Route path="/vision" element={<VisionUpload />} />
                     <Route path="/emergency" element={<EmergencyFinder />} />
-                    <Route path="/cards" element={<TravelCards />} />
+                    <Route path="/travel-cards" element={<TravelCards />} />
                     <Route path="/meds" element={<MedicationTracker />} />
                 </Routes>
                 <Toaster position="bottom-center" />
